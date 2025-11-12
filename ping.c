@@ -1,7 +1,16 @@
 #include "ping.h" 
 
-int main (void)
+static void parser(char *av[])
 {
-	printf("yeee\n");
+	
+
+}
+
+int main (int ac, char *av[])
+{
+	if (ac != 1)
+	{
+		parser(av);
+	} 
 	return (0);
 }
