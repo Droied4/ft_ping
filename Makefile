@@ -2,7 +2,7 @@ NAME = ft_ping
 
 CC = gcc
 IDIR = ./include 
-CFLAGS = -I $(IDIR)
+CFLAGS = -Wall -Werror -Wextra -I $(IDIR)
 SRC = ping.c
 OBJ = $(SRC:.c=.o)
 
