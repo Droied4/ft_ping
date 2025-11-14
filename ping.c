@@ -1,8 +1,13 @@
 #include "ping.h" 
 
-//Tasks
-//1. improve error management
-//2. Error ftping without arguments or  
+//1. open a raw socket
+//2. send package
+
+static int error(int error_code, char *msg)
+{
+	dprintf(2, "ping: %s\n", msg);
+	return (error_code);
+}
 
 static void usage(void)
 {
@@ -22,7 +27,7 @@ static void flagCases(int ac, char *av[])
 		switch (ch)
 		{
 			case ':':
-				printf ("%s\n", ERR1);
+				exit (error(2, ERR1));
 				break ;
 			case '?':
 				usage();
@@ -34,9 +39,66 @@ static void flagCases(int ac, char *av[])
 	}
 }
 
+static char *dnsResolution(char *addr_host, struct sockaddr_in *addr_con)
+{
+	printf("Dns resolution---\n");
+	struct hostent *host_entity;
+	char *ip = (char *)malloc(NI_MAXHOST * sizeof(char));
+	if (!ip)
+		return (NULL);
+	if ((host_entity = gethostbyname(addr_host)) == NULL)
+		return (NULL);
+
+	strcpy(ip, inet_ntoa(*(struct in_addr *)host_entity->h_addr));
+	(*addr_con).sin_family = host_entity->h_addrtype;
+	(*addr_con).sin_port = htons(PORT_NO);
+	(*addr_con).sin_addr.s_addr = *(long *)host_entity->h_addr;  
+	return (ip);
+
+}	
+
+static void rawSocket(void) 
+{
+	printf("create raw socket\n");
+}
+
+static void sendPing(void) 
+{
+	printf("send ping\n");
+}
+
 static void parser(int ac, char *av[])
 {
 	flagCases(ac, av);
+}
+
+static int getAddr(char *av[])
+{
+	int i = 1;
+	while(av[i])
+	{
+		if (av[i][0] != '-')
+			return (i);
+		i++;
+	}
+	exit(error(2, ERR1));	
+	return (-1);
+}
+
+static void ping(char *av[])
+{
+	int pos;
+	char *ip_addr;
+	struct sockaddr_in addr_con;
+
+	pos = getAddr(av);
+	ip_addr = dnsResolution(av[pos], &addr_con);
+	if (!ip_addr)
+		exit(error(2, ERR2));
+	printf("ip-> %s\n", ip_addr);
+	exit (error(1, av[pos]));		
+	rawSocket();
+	sendPing();
 }
 
 int main (int ac, char *av[])
@@ -44,8 +106,8 @@ int main (int ac, char *av[])
 	if (ac != 1)
 	{
 		parser(ac, av);
+		ping(av);
 		return (0);
 	} 
-	printf ("%s\n", ERR1);
-	return (2);
+	return (error(2, ERR1));
 }
