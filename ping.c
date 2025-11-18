@@ -68,11 +68,78 @@ static int rawSocket(void)
 	return sock_fd;
 }
 
-static void sendPing(void) 
+//calculate the checksum (RFC 1071)
+static unsigned short checksum (void *b, int len)
 {
+	unsigned short *buf = b;
+    unsigned int sum = 0;
+    unsigned short result;
+
+    for (sum = 0; len > 1; len -= 2)
+        sum += *buf++;
+    if (len == 1)
+        sum += *(unsigned char *)buf;
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
+    result = ~sum;
+    return result;
+}
+
+static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, char *ip_name) 
+{
+	struct ping_pkt pckt;
+	struct sockaddr_in r_addr;
+	struct timeval tv_out;
+	int msg_count = 0, i, flag = 1;
+	unsigned int raddr_len;
+	char rbuf[128];
 	printf("--------Send ping-------\n");
 
-	exit (error(1, av[pos]));		
+	//init tv_out
+	tv_out.tv_sec = RECV_TIMEOUT;
+	tv_out.tv_usec = 0;
+	//Configure timeout for receive
+	setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv_out, sizeof(tv_out));
+
+	//set pckt 
+	bzero(&pckt, sizeof(pckt));
+	pckt.hdr.type = ICMP_ECHO;
+	pckt.hdr.un.echo.id = getpid();
+
+	for (i = 0; i < (int)sizeof(pckt.msg); i++)
+		pckt.msg[i] = i + '0';
+
+	pckt.msg[i] = 0;
+	pckt.hdr.un.echo.sequence = msg_count++;
+	pckt.hdr.checksum = checksum(&pckt, sizeof(pckt));
+
+	usleep(PING_SLEEP);
+	//send
+	if (sendto(socket_fd, &pckt, sizeof(pckt), 0, (struct sockaddr *)addr_con, sizeof(addr_con)) <= 0)
+	{
+		printf("Packet send failed\n");	
+		flag = 0;
+	}
+	//receive
+	raddr_len = sizeof(r_addr);
+	if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) <= 0 && msg_count > 1)
+	{
+		printf("Packet receive failed\n");	
+	}
+	else
+	{
+		if (flag)
+		{
+			printf("es cero %i\n", flag);
+		}
+		else 
+		{
+			printf("No es cero %i\n", flag);
+		}
+	}
+	printf("--- %s ping statistics ---\n", ip_name);
+	printf("%d packets transmitted, %d received, %i%% packet loss, time %i ms.\n", msg_count, 0, 100, 0);	
+	(void)ip_addr;
 }
 
 static int getAddr(char *av[])
@@ -99,7 +166,7 @@ static void ping(char *av[])
 	if (!ip_addr)
 		exit(error(2, ERR2));
 	sock_fd = rawSocket();
-	sendPing(sock_fd, &addr_con, ip_addr);
+	sendPing(sock_fd, &addr_con, ip_addr, av[pos]);
 }
 
 static void parser(int ac, char *av[])

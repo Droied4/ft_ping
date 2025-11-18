@@ -2,20 +2,25 @@ NAME = ft_ping
 
 CC = gcc
 IDIR = ./include 
-CFLAGS = -Wall -Werror -Wextra -I $(IDIR)
+HEADER = $(IDIR)/ping.h
+CFLAGS = -Wall -Werror -Wextra -I $(IDIR) -MMD -MP
 SRC = ping.c
 OBJ = $(SRC:.c=.o)
-
-%.o: %.c 
-	$(CC) -c -o $@ $< $(CFLAGS)
+DEPS = $(OBJ:.o=.d)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) 
+	$(CC) $(CFLAGS) $^ -o $@ 
+
+-include $(DEPS)
+
+%.o: %.c Makefile 
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	@rm -f $(OBJ)
+	@rm -f $(DEPS)
 
 fclean: clean
 	@rm -f $(NAME)
