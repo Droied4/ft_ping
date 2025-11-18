@@ -8,6 +8,7 @@
 # include <stdlib.h>
 # include <string.h>
 # include <arpa/inet.h>
+#include <netinet/in.h>
 
 # define COMMON_OPTSTR ":?v:"
 # define h_addr h_addr_list[0]

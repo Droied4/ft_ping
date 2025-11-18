@@ -1,7 +1,6 @@
 #include "ping.h" 
 
-//1. open a raw socket
-//2. send package
+//1. send package
 
 static int error(int error_code, char *msg)
 {
@@ -41,7 +40,6 @@ static void flagCases(int ac, char *av[])
 
 static char *dnsResolution(char *addr_host, struct sockaddr_in *addr_con)
 {
-	printf("Dns resolution---\n");
 	struct hostent *host_entity;
 	char *ip = (char *)malloc(NI_MAXHOST * sizeof(char));
 	if (!ip)
@@ -54,22 +52,27 @@ static char *dnsResolution(char *addr_host, struct sockaddr_in *addr_con)
 	(*addr_con).sin_port = htons(PORT_NO);
 	(*addr_con).sin_addr.s_addr = *(long *)host_entity->h_addr;  
 	return (ip);
-
 }	
 
-static void rawSocket(void) 
+static int rawSocket(void) 
 {
-	printf("create raw socket\n");
+	int sock_fd;
+
+	sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	if (sock_fd < 0)
+	{
+		if (geteuid() != 0)
+			exit(error(1, "sudo permission required for raw sockets"));
+		exit(error(1, "socket file descriptor not received"));
+	}
+	return sock_fd;
 }
 
 static void sendPing(void) 
 {
-	printf("send ping\n");
-}
+	printf("--------Send ping-------\n");
 
-static void parser(int ac, char *av[])
-{
-	flagCases(ac, av);
+	exit (error(1, av[pos]));		
 }
 
 static int getAddr(char *av[])
@@ -87,7 +90,7 @@ static int getAddr(char *av[])
 
 static void ping(char *av[])
 {
-	int pos;
+	int pos, sock_fd;
 	char *ip_addr;
 	struct sockaddr_in addr_con;
 
@@ -95,10 +98,13 @@ static void ping(char *av[])
 	ip_addr = dnsResolution(av[pos], &addr_con);
 	if (!ip_addr)
 		exit(error(2, ERR2));
-	printf("ip-> %s\n", ip_addr);
-	exit (error(1, av[pos]));		
-	rawSocket();
-	sendPing();
+	sock_fd = rawSocket();
+	sendPing(sock_fd, &addr_con, ip_addr);
+}
+
+static void parser(int ac, char *av[])
+{
+	flagCases(ac, av);
 }
 
 int main (int ac, char *av[])
