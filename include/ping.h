@@ -2,7 +2,9 @@
 # define PING_H
 
 # include <stdio.h>
+# include <time.h>
 # include <netdb.h>
+# include <signal.h>
 # include <unistd.h>
 # include <stdbool.h>
 # include <stdlib.h>
@@ -20,6 +22,9 @@
 # define ERR1 "usage error: Destination address required"
 # define ERR2 "Name or service not know"
 # define ERR3 "Setting socket options to TTL failed"
+# define ERR4 "sendto: Network is unreachable"
+
+extern volatile int loop;
 
 struct ping_pkt {
     struct icmphdr hdr;
