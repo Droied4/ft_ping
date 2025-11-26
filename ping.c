@@ -90,7 +90,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 	struct ping_pkt pckt;
 	struct sockaddr_in r_addr;
 	struct timeval tv_out;
-	int msg_count = 0, i, flag = 1;
+	int msg_count = 0, i, flag = 1, ttl_val = 64;
 	unsigned int raddr_len;
 	char rbuf[128];
 	printf("--------Send ping-------\n");
@@ -98,6 +98,10 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 	//init tv_out
 	tv_out.tv_sec = RECV_TIMEOUT;
 	tv_out.tv_usec = 0;
+	
+	//configure Time to Live opt
+	if (setsockopt(socket_fd, SOL_IP, IP_TTL, &ttl_val, sizeof(ttl_val)) != 0)
+		exit(error(1, ERR3));
 	//Configure timeout for receive
 	setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv_out, sizeof(tv_out));
 

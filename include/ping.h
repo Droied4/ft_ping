@@ -19,6 +19,7 @@
 # define RECV_TIMEOUT 1
 # define ERR1 "usage error: Destination address required"
 # define ERR2 "Name or service not know"
+# define ERR3 "Setting socket options to TTL failed"
 
 struct ping_pkt {
     struct icmphdr hdr;
