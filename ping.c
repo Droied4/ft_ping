@@ -129,13 +129,13 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 		pckt.hdr.checksum = checksum(&pckt, sizeof(pckt));
 
 		usleep(PING_SLEEP);
-		//send
 		clock_gettime(CLOCK_MONOTONIC, &time_start);
 		if (!loop)
 		{
 			msg_count--;
 			break ;
 		}
+		//send
 		if (sendto(socket_fd, &pckt, sizeof(pckt), 0, (struct sockaddr *)addr_con, sizeof(*addr_con)) <= 0)
 		{
 			error(2, ERR4);
@@ -161,7 +161,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 				printf("Packet failed received with ICMP type %d code %d\n", recv_hdr->type, recv_hdr->code);
 			else 
 			{
-				printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
+				printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
 				msg_received_count++;
 			}
 		}
@@ -172,7 +172,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 
 	printf("\n--- %s ping statistics ---\n", ip_name);
 
-	printf("%d packets transmitted, %d received, %f%% packet loss, time %Lf ms.\n", msg_count, msg_received_count, ((msg_count - msg_received_count) / (double)msg_count) * 100.0, total_msec);	
+	printf("%d packets transmitted, %d received, %.0f%% packet loss, time %.0Lfms\n", msg_count, msg_received_count, ((msg_count - msg_received_count) / (double)msg_count) * 100.0, total_msec);	
 }
 
 static int getAddr(char *av[])
