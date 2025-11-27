@@ -17,7 +17,13 @@ static void usage(void)
 	exit(1);
 }
 
-static void flagCases(int ac, char *av[])
+static void verboseMode(t_ping p)
+{
+	printf("ping: sock4.fd: %d (socktype: %s)\n", p.sock_fd, "SOCK_DGRAM");
+	printf("ping: ai->ai_family: %s, ai->ai_canonname: '%s'\n", "AF_INET", p.ip_name);
+}
+
+static void flagCases(int ac, char *av[], t_ping p)
 {
 	int ch;
 	opterr = 0;
@@ -32,7 +38,7 @@ static void flagCases(int ac, char *av[])
 				usage();
 				break ;
 			case 'v':
-				printf ("la flag es v y tiene este arg %s\n", optarg);
+				verboseMode(p);
 				break ;	
 		}
 	}
@@ -58,13 +64,9 @@ static int rawSocket(void)
 {
 	int sock_fd;
 
-	sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
 	if (sock_fd < 0)
-	{
-		if (geteuid() != 0)
-			exit(error(1, "sudo permission required for raw sockets"));
-		exit(error(1, "socket file descriptor not received"));
-	}
+		return (error(-1, "socket file descriptor not received"));
 	return sock_fd;
 }
 
@@ -92,7 +94,7 @@ static void loop_handler(int sig)
 	(void)sig;
 }
 
-static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, char *ip_name) 
+static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, char *ip_name) 
 {
 	struct ping_pkt pckt;
 	struct sockaddr_in r_addr;
@@ -137,10 +139,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 		}
 		//send
 		if (sendto(socket_fd, &pckt, sizeof(pckt), 0, (struct sockaddr *)addr_con, sizeof(*addr_con)) <= 0)
-		{
-			error(2, ERR4);
-			return ;
-		}
+			return (error(2, ERR4));
 		//receive
 		raddr_len = sizeof(r_addr);
 		if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) <= 0 && msg_count > 1)
@@ -151,12 +150,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 			time_elapsed = ((double)(time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
 			long double rtt_msec = (time_end.tv_sec - time_start.tv_sec) * 1000.0 + time_elapsed;
 			
-			/////---sus 
-			struct iphdr *ip_hdr = (struct iphdr *)rbuf;
-    		int iphdr_len = ip_hdr->ihl * 4;
-			struct icmphdr *recv_hdr = (struct icmphdr *)(rbuf + iphdr_len);
-			////--sus
-
+			struct icmphdr *recv_hdr = (struct icmphdr *)rbuf;
 			if (!(recv_hdr->type == 0 && recv_hdr->code == 0))
 				printf("Packet failed received with ICMP type %d code %d\n", recv_hdr->type, recv_hdr->code);
 			else 
@@ -173,6 +167,7 @@ static void sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr,
 	printf("\n--- %s ping statistics ---\n", ip_name);
 
 	printf("%d packets transmitted, %d received, %.0f%% packet loss, time %.0Lfms\n", msg_count, msg_received_count, ((msg_count - msg_received_count) / (double)msg_count) * 100.0, total_msec);	
+	return (0);
 }
 
 static int getAddr(char *av[])
@@ -188,33 +183,34 @@ static int getAddr(char *av[])
 	return (-1);
 }
 
-static void ping(char *av[])
+static void ping(int ac, char *av[])
 {
-	int pos, sock_fd;
-	char *ip_addr;
-	struct sockaddr_in addr_con;
+	t_ping p;
+	int pos;
 
 	pos = getAddr(av);
-	ip_addr = dnsResolution(av[pos], &addr_con);
-	if (!ip_addr)
+	p.ip_name = strdup(av[pos]);
+	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
+	if (!p.ip_addr)
 		exit(error(2, ERR2));
 	//a partir de aqui hay memoria reservada liberar ip_addr en caso de error
-	sock_fd = rawSocket();
+	p.sock_fd = rawSocket();
+	if (p.sock_fd <= 0)
+	{
+		free(p.ip_addr);
+		exit(1);
+	}
+	//y a partir de aqui hay que cerrar el socket abierto
 	signal(SIGINT, loop_handler);
-	sendPing(sock_fd, &addr_con, ip_addr, av[pos]);
-}
-
-static void parser(int ac, char *av[])
-{
-	flagCases(ac, av);
+	flagCases(ac, av, p);
+	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name);
 }
 
 int main (int ac, char *av[])
 {
 	if (ac != 1)
 	{
-		parser(ac, av);
-		ping(av);
+		ping(ac, av);
 		return (0);
 	} 
 	return (error(2, ERR1));

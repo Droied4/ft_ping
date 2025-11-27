@@ -31,4 +31,11 @@ struct ping_pkt {
     char msg[PING_PKT_S - sizeof(struct icmphdr)];
 };
 
+typedef struct ping {
+	int sock_fd;	
+	char *ip_addr;
+	char *ip_name;
+	struct sockaddr_in addr_con;
+} t_ping;
+
 #endif
