@@ -16,7 +16,6 @@
 # define COMMON_OPTSTR ":?v:f:"
 # define h_addr h_addr_list[0]
 # define PORT_NO 0
-# define PING_SLEEP 1000000
 # define PING_PKT_S 64
 # define RECV_TIMEOUT 1
 # define ERR1 "usage error: Destination address required"

@@ -1,4 +1,4 @@
-#include "ping.h" 
+#include "ping_bonus.h" 
 
 volatile int loop = 42;
 
@@ -55,6 +55,7 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				verboseMode(*p);
 				break ;	
 			case 'f':
+				p->conf.ping_sleep = 0;
 				break ;
 //case 'l'
 //case 'n'
@@ -121,14 +122,40 @@ static void loop_handler(int sig)
 	(void)sig;
 }
 
-static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, char *ip_name) 
+static int receiveLogic(int socket_fd, int msg_count, struct timespec time_start, char *ip_addr, int ttl_val)
+{
+	unsigned int raddr_len;
+	char rbuf[128];
+	struct timespec time_end;
+	double time_elapsed;
+	struct sockaddr_in r_addr;
+
+	raddr_len = sizeof(r_addr);
+	if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) <= 0 && msg_count > 1)
+		printf("Request timeout for icmp_seq %d\n", msg_count);	
+	else
+	{
+		clock_gettime(CLOCK_MONOTONIC, &time_end);
+		time_elapsed = ((double)(time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
+		long double rtt_msec = (time_end.tv_sec - time_start.tv_sec) * 1000.0 + time_elapsed;
+
+		struct icmphdr *recv_hdr = (struct icmphdr *)rbuf;
+		if (!(recv_hdr->type == 0 && recv_hdr->code == 0))
+			printf("Packet failed received with ICMP type %d code %d\n", recv_hdr->type, recv_hdr->code);
+		else 
+		{
+			printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
+			return (1);
+		}
+	}
+	return (0);
+}
+
+static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, char *ip_name, t_config config) 
 {
 	struct ping_pkt pckt;
-	struct sockaddr_in r_addr;
 	struct timeval tv_out;
-	struct timespec time_start, time_end, tfs, tfe;
-	char rbuf[128];
-	unsigned int raddr_len;
+	struct timespec time_start, tfs, tfe;
 	long double total_msec = 0;
 	double time_elapsed;
 	int msg_count = 0, i, ttl_val = 64, msg_received_count = 0;
@@ -157,7 +184,7 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 		pckt.hdr.un.echo.sequence = msg_count++;
 		pckt.hdr.checksum = checksum(&pckt, sizeof(pckt));
 
-		usleep(PING_SLEEP);
+		usleep(config.ping_sleep);
 		clock_gettime(CLOCK_MONOTONIC, &time_start);
 		if (!loop)
 		{
@@ -167,25 +194,10 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 		//send
 		if (sendto(socket_fd, &pckt, sizeof(pckt), 0, (struct sockaddr *)addr_con, sizeof(*addr_con)) <= 0)
 			return (error(2, ERR4));
-		//receive
-		raddr_len = sizeof(r_addr);
-		if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) <= 0 && msg_count > 1)
-			printf("Request timeout for icmp_seq %d\n", msg_count);	
+		if (config.ping_sleep > 0)
+			msg_received_count += receiveLogic(socket_fd, msg_count, time_start, ip_addr, ttl_val);
 		else
-		{
-			clock_gettime(CLOCK_MONOTONIC, &time_end);
-			time_elapsed = ((double)(time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
-			long double rtt_msec = (time_end.tv_sec - time_start.tv_sec) * 1000.0 + time_elapsed;
-			
-			struct icmphdr *recv_hdr = (struct icmphdr *)rbuf;
-			if (!(recv_hdr->type == 0 && recv_hdr->code == 0))
-				printf("Packet failed received with ICMP type %d code %d\n", recv_hdr->type, recv_hdr->code);
-			else 
-			{
-				printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
-				msg_received_count++;
-			}
-		}
+			write(1, ".", 1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &tfe);
 	time_elapsed = ((double)(tfe.tv_nsec - tfs.tv_nsec)) / 1000000.0;
@@ -210,13 +222,21 @@ static int getAddr(char *av[])
 	return (-1);
 }
 
-static void ping(int ac, char *av[])
+static void init(char *av[], t_ping *p)
 {
-	t_ping p;
 	int pos;
 
 	pos = getAddr(av);
-	p.ip_name = strdup(av[pos]);
+	p->ip_name = strdup(av[pos]); p->conf.ping_sleep = 1000000;
+	p->conf.ping_sleep = 1000000;
+}
+
+
+static void ping(int ac, char *av[])
+{
+	t_ping p;
+
+	init(av, &p); 
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
 		exit(error(2, ERR2));
@@ -225,7 +245,7 @@ static void ping(int ac, char *av[])
 		safeExit(&p);
 	signal(SIGINT, loop_handler);
 	flagCases(ac, av, &p);
-	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name);
+	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name, p.conf);
 	safeExit(&p);
 }
 

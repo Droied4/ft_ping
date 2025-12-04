@@ -15,7 +15,7 @@ HEADER = $(IDIR)/ping.h
 OBJ = $(addprefix $(OBJS_PATH)/, ${SRC:.c=.o})
 DEPS = $(addprefix $(OBJS_PATH)/, ${OBJ:.o=.d})
 
-BONUS = ./bonus
+BONUS = bonus
 BONUS_IDIR = $(BONUS)/include
 BONUS_HEADER = $(BONUS_IDIR)/ping_bonus.h
 BONUS_CFLAGS = $(FLAGS) -I $(BONUS_IDIR) $(DEP_FLAGS) 
@@ -37,6 +37,10 @@ bonus: $(BONUS_OBJ)
 $(OBJS_PATH)/%.o: %.c Makefile 
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJS_PATH)/bonus/%.o: bonus/%.c Makefile
+	@mkdir -p $(dir $@)
+	$(CC) $(BONUS_CFLAGS) -c $< -o $@
 
 clean:
 	@rm -rf $(OBJS_PATH)
