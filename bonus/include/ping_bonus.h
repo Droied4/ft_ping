@@ -12,11 +12,11 @@
 # include <arpa/inet.h>
 # include <netinet/in.h>
 # include <netinet/ip_icmp.h>
+# include <netinet/ip.h>
 
-# define COMMON_OPTSTR ":?v:f:"
+# define COMMON_OPTSTR ":?v:f:s:"
 # define h_addr h_addr_list[0]
 # define PORT_NO 0
-# define PING_PKT_S 64
 # define RECV_TIMEOUT 1
 # define ERR1 "usage error: Destination address required"
 # define ERR2 "Name or service not known"
@@ -25,13 +25,14 @@
 
 extern volatile int loop;
 
-struct ping_pkt {
+typedef struct ping_pkt {
     struct icmphdr hdr;
-    char msg[PING_PKT_S - sizeof(struct icmphdr)];
-};
+	char *msg;
+} t_pckt;
 
 typedef struct config {
 	int ping_sleep;
+	int ping_pkt_size;
 } t_config;
 
 typedef struct ping {
@@ -40,6 +41,7 @@ typedef struct ping {
 	char *ip_name;
 	struct sockaddr_in addr_con;
 	t_config conf;
+	t_pckt pckt;
 } t_ping;
 
 
