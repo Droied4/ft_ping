@@ -57,6 +57,8 @@ static void flagCases(int ac, char *av[], t_ping *p)
 			case 'f':
 				p->conf.ping_sleep = 0;
 				break ;
+			case 'l':
+			break ;	
 //case 'l'
 //case 'n'
 //case 'w'
@@ -131,18 +133,14 @@ static int receiveLogic(int socket_fd, int msg_count, struct timespec time_start
 	struct sockaddr_in r_addr;
 
 	raddr_len = sizeof(r_addr);
-	if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) <= 0 && msg_count > 1)
-		printf("Request timeout for icmp_seq %d\n", msg_count);	
-	else
+	if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) > 0)
 	{
 		clock_gettime(CLOCK_MONOTONIC, &time_end);
 		time_elapsed = ((double)(time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
 		long double rtt_msec = (time_end.tv_sec - time_start.tv_sec) * 1000.0 + time_elapsed;
 
 		struct icmphdr *recv_hdr = (struct icmphdr *)rbuf;
-		if (!(recv_hdr->type == 0 && recv_hdr->code == 0))
-			printf("Packet failed received with ICMP type %d code %d\n", recv_hdr->type, recv_hdr->code);
-		else 
+		if (recv_hdr->type == 0 && recv_hdr->code == 0)
 		{
 			printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
 			return (1);
@@ -170,6 +168,7 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 	//Configure timeout for receive
 	setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv_out, sizeof(tv_out));
 
+	printf("PING %s (%s) %d(%d) bytes of data\n", ip_name, ip_addr, PING_PKT_S, PING_PKT_S + 8 + 20);
 	while (loop)
 	{
 		//set pckt 

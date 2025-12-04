@@ -20,7 +20,7 @@
 # define PING_PKT_S 64
 # define RECV_TIMEOUT 1
 # define ERR1 "usage error: Destination address required"
-# define ERR2 "Name or service not know"
+# define ERR2 "Name or service not known"
 # define ERR3 "Setting socket options to TTL failed"
 # define ERR4 "sendto: Network is unreachable"
 
