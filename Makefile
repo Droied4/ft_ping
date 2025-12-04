@@ -3,7 +3,7 @@ NAME = ft_ping
 CC = gcc
 IDIR = ./include 
 HEADER = $(IDIR)/ping.h
-CFLAGS = -Wall -Werror -Wextra -I $(IDIR) -MMD -MP
+CFLAGS = -Wall -Werror -Wextra -I $(IDIR) -MMD -MP -fsanitize=address -g
 SRC = ping.c
 OBJ = $(SRC:.c=.o)
 DEPS = $(OBJ:.o=.d)

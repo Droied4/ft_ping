@@ -2,7 +2,20 @@
 
 volatile int loop = 42;
 
+static void safeExit(t_ping *p)
+{
+	if (p->ip_addr)
+		free(p->ip_addr);
+	if (p->sock_fd > 0)
+	{
+		close(p->sock_fd);	
+		p->sock_fd = -1;
+	}
+	exit(1);
+}
+
 static int error(int error_code, char *msg)
+
 {
 	dprintf(2, "ping: %s\n", msg);
 	return (error_code);
@@ -23,7 +36,7 @@ static void verboseMode(t_ping p)
 	printf("ping: ai->ai_family: %s, ai->ai_canonname: '%s'\n", "AF_INET", p.ip_name);
 }
 
-static void flagCases(int ac, char *av[], t_ping p)
+static void flagCases(int ac, char *av[], t_ping *p)
 {
 	int ch;
 	opterr = 0;
@@ -32,13 +45,14 @@ static void flagCases(int ac, char *av[], t_ping p)
 		switch (ch)
 		{
 			case ':':
-				exit (error(2, ERR1));
+				error(2, ERR1);
+				safeExit(p);
 				break ;
 			case '?':
 				usage();
 				break ;
 			case 'v':
-				verboseMode(p);
+				verboseMode(*p);
 				break ;	
 		}
 	}
@@ -112,7 +126,7 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 	clock_gettime(CLOCK_MONOTONIC, &tfs);
 	//configure Time to Live opt
 	if (setsockopt(socket_fd, SOL_IP, IP_TTL, &ttl_val, sizeof(ttl_val)) != 0)
-		exit(error(1, ERR3));
+		return (error(1, ERR3));
 	//Configure timeout for receive
 	setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv_out, sizeof(tv_out));
 
@@ -123,7 +137,7 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 		pckt.hdr.type = ICMP_ECHO;
 		pckt.hdr.un.echo.id = getpid();
 
-		for (i = 0; i < (int)sizeof(pckt.msg); i++)
+		for (i = 0; i < (int)sizeof(pckt.msg) - 1; ++i)
 			pckt.msg[i] = i + '0';
 
 		pckt.msg[i] = 0;
@@ -193,17 +207,13 @@ static void ping(int ac, char *av[])
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
 		exit(error(2, ERR2));
-	//a partir de aqui hay memoria reservada liberar ip_addr en caso de error
 	p.sock_fd = rawSocket();
 	if (p.sock_fd <= 0)
-	{
-		free(p.ip_addr);
-		exit(1);
-	}
-	//y a partir de aqui hay que cerrar el socket abierto
+		safeExit(&p);
 	signal(SIGINT, loop_handler);
-	flagCases(ac, av, p);
+	flagCases(ac, av, &p);
 	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name);
+	safeExit(&p);
 }
 
 int main (int ac, char *av[])
