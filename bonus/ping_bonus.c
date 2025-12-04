@@ -11,6 +11,7 @@ static void safeExit(t_ping *p)
 		close(p->sock_fd);	
 		p->sock_fd = -1;
 	}
+	//LIBERAR MEMORIA DEL MALLOC DEL MSG
 	exit(1);
 }
 
@@ -27,6 +28,7 @@ static void usage(void)
 		  "\tping [options] <destination>\n"
 		  "Options:\n" 
 		  "-v \t\t verbose output\n");
+	//AUMENTAR EL USAGE
 	exit(1);
 }
 
@@ -66,7 +68,6 @@ static void flagCases(int ac, char *av[], t_ping *p)
 //case 'W'
 //case 'p'
 //case 'r'
-//case 's'
 //case 'T'
 //estas dos ultimas ni idea de como se hacen con este modo
 //case 'ttl'
