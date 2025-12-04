@@ -54,7 +54,8 @@ static void flagCases(int ac, char *av[], t_ping *p)
 			case 'v':
 				verboseMode(*p);
 				break ;	
-//case 'f'
+			case 'f':
+				break ;
 //case 'l'
 //case 'n'
 //case 'w'

@@ -1,26 +1,45 @@
 NAME = ft_ping
 
 CC = gcc
+
+OBJS_PATH=./build
+
+FLAGS = -Wall -Werror -Wextra
+DEP_FLAGS = -MMD -MP
+ADR_FLAGS = -fsanitize=address -g
+CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) #$(ADR_FLAGS)
+
+SRC = ping.c
 IDIR = ./include 
 HEADER = $(IDIR)/ping.h
-CFLAGS = -Wall -Werror -Wextra -I $(IDIR) -MMD -MP -fsanitize=address -g
-SRC = ping.c
-OBJ = $(SRC:.c=.o)
-DEPS = $(OBJ:.o=.d)
+OBJ = $(addprefix $(OBJS_PATH)/, ${SRC:.c=.o})
+DEPS = $(addprefix $(OBJS_PATH)/, ${OBJ:.o=.d})
+
+BONUS = ./bonus
+BONUS_IDIR = $(BONUS)/include
+BONUS_HEADER = $(BONUS_IDIR)/ping_bonus.h
+BONUS_CFLAGS = $(FLAGS) -I $(BONUS_IDIR) $(DEP_FLAGS) 
+BONUS_SCR = $(BONUS)/ping_bonus.c
+BONUS_OBJ = $(addprefix $(OBJS_PATH)/, ${BONUS_SCR:.c=.o})
+BONUS_DEPS = $(addprefix $(OBJS_PATH)/, $(BONUS_OBJ:.o=.d))
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ 
 
--include $(DEPS)
+bonus: $(BONUS_OBJ)
+	$(CC) $(BONUS_CFLAGS) $^ -o $(NAME) 
 
-%.o: %.c Makefile 
+-include $(DEPS)
+-include $(BONUS_DEPS)
+
+$(OBJS_PATH)/%.o: %.c Makefile 
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	@rm -f $(OBJ)
-	@rm -f $(DEPS)
+	@rm -rf $(OBJS_PATH)
 
 fclean: clean
 	@rm -f $(NAME)
@@ -32,4 +51,4 @@ droied:
 	@echo "By Droied"
 	@echo
 
-.PHONY: all clean fclean droied 
+.PHONY: all bonus clean fclean re droied 

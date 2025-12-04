@@ -13,7 +13,7 @@
 # include <netinet/in.h>
 # include <netinet/ip_icmp.h>
 
-# define COMMON_OPTSTR ":?v:"
+# define COMMON_OPTSTR ":?v:f:"
 # define h_addr h_addr_list[0]
 # define PORT_NO 0
 # define PING_SLEEP 1000000
@@ -31,11 +31,17 @@ struct ping_pkt {
     char msg[PING_PKT_S - sizeof(struct icmphdr)];
 };
 
+typedef struct config {
+	int ping_sleep;
+} t_config;
+
 typedef struct ping {
 	int sock_fd;	
 	char *ip_addr;
 	char *ip_name;
 	struct sockaddr_in addr_con;
+	t_config conf;
 } t_ping;
+
 
 #endif
