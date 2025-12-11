@@ -14,7 +14,7 @@
 # include <netinet/ip_icmp.h>
 # include <netinet/ip.h>
 
-# define COMMON_OPTSTR ":?v:f:s:"
+# define COMMON_OPTSTR ":?v:f:s:n:"
 # define h_addr h_addr_list[0]
 # define PORT_NO 0
 # define RECV_TIMEOUT 1
@@ -33,6 +33,7 @@ typedef struct ping_pkt {
 typedef struct config {
 	int ping_sleep;
 	int ping_pkt_size;
+	bool resolve_dns;
 } t_config;
 
 typedef struct ping {

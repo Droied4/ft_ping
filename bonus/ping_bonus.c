@@ -62,8 +62,11 @@ static void flagCases(int ac, char *av[], t_ping *p)
 			case 's':
 				p->conf.ping_pkt_size = atoi(optarg);
 			break ;	
+			case 'n':
+				p->conf.resolve_dns = true;
+			break ;
+
 //case 'l'
-//case 'n'
 //case 'w'
 //case 'W'
 //case 'p'
@@ -201,7 +204,10 @@ static int sendPing(t_ping *p, t_pckt pckt, struct sockaddr_in *addr_con, t_conf
 
 	beforeLoop(p, &tv_out, &ttl_val, &pckt);
 	clock_gettime(CLOCK_MONOTONIC, &tfs);
-	printf("PING %s (%s) %d(%d) bytes of data\n", ip_name, ip_addr, conf.ping_pkt_size, (int)(conf.ping_pkt_size + sizeof(struct icmphdr) + sizeof(struct ip)));
+	if (conf.resolve_dns)
+		printf("PING %s (%s) %d(%d) bytes of data\n", ip_addr, ip_addr, conf.ping_pkt_size, (int)(conf.ping_pkt_size + sizeof(struct icmphdr) + sizeof(struct ip)));
+	else
+		printf("PING %s (%s) %d(%d) bytes of data\n", ip_name, ip_addr, conf.ping_pkt_size, (int)(conf.ping_pkt_size + sizeof(struct icmphdr) + sizeof(struct ip)));
 	while (loop)
 	{
 		//Config pckt 
@@ -226,7 +232,10 @@ static int sendPing(t_ping *p, t_pckt pckt, struct sockaddr_in *addr_con, t_conf
 	time_elapsed = ((double)(tfe.tv_nsec - tfs.tv_nsec)) / 1000000.0;
 	total_msec = (tfe.tv_sec - tfs.tv_sec) * 1000.0 + time_elapsed;
 
-	printf("\n--- %s ping statistics ---\n", ip_name);
+	if (conf.resolve_dns)
+		printf("\n--- %s ping statistics ---\n", ip_addr);
+	else
+		printf("\n--- %s ping statistics ---\n", ip_name);
 	printf("%d packets transmitted, %d received, %.0f%% packet loss, time %.0Lfms\n", msg_count, msg_received_count, ((msg_count - msg_received_count) / (double)msg_count) * 100.0, total_msec);	
 	return (0);
 }
@@ -256,6 +265,7 @@ static void init(char *av[], t_ping *p)
 	p->ip_name = strdup(av[pos]); p->conf.ping_sleep = 1000000;
 	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
+	p->conf.resolve_dns = false;
 }
 
 
