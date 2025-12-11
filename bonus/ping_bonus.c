@@ -229,7 +229,7 @@ static int sendPing(t_ping *p, t_pckt pckt, struct sockaddr_in *addr_con, t_conf
 
 		usleep(conf.ping_sleep);
 		clock_gettime(CLOCK_MONOTONIC, &time_start);
-		if (!loop || conf.max_send == -1)
+		if (!loop || (conf.max_send > 0 && msg_received_count >= conf.max_send))
 		{
 			msg_count--;
 			break ;
