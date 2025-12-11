@@ -77,8 +77,7 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				break ;
 			case 's':
 				checkOpt(optarg, p);
-				p->conf.ping_pkt_size = atoi(optarg);
-			break ;	
+				p->conf.ping_pkt_size = atoi(optarg); break ;	
 			case 'n':
 				p->conf.resolve_dns = true;
 			break ;
@@ -86,8 +85,8 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				checkOpt(optarg, p);
 				p->conf.max_send = atoi(optarg);
 			break ;
-			case 'W':
-				checkOpt(optarg, p);
+			case 'p': 
+				p->conf.payload = *optarg;
 			break ;
 		}
 	}
@@ -199,7 +198,7 @@ static void beforeLoop(t_ping *p, struct timeval *tv_out, int *ttl_val, t_pckt *
     if (!pckt->msg)
         safeExit(p);
     for (int i = 0; i < p->conf.ping_pkt_size - 1; i++)
-        pckt->msg[i] = '0' + (i % 10);
+        pckt->msg[i] = p->conf.payload;
 }
 
 
@@ -281,6 +280,7 @@ static void init(char *av[], t_ping *p)
 	p->conf.ping_pkt_size = 56;
 	p->conf.resolve_dns = false;
 	p->conf.max_send = 0;
+	p->conf.payload = '0';
 }
 
 
