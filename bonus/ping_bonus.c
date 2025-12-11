@@ -27,8 +27,12 @@ static void usage(void)
 	printf("Usage\n" 
 		  "\tping [options] <destination>\n"
 		  "Options:\n" 
-		  "-v \t\t verbose output\n");
-	//AUMENTAR EL USAGE
+		  "-v \t\t verbose output\n"
+		  "-f \t\t flood ping\n"
+		  "-s \t\t packet size\n"
+		  "-n \t\t numeric output only\n"
+		  "-w \t\t deadline\n"
+		  "-W \t\t timeout\n");
 	exit(1);
 }
 
@@ -36,6 +40,18 @@ static void verboseMode(t_ping p)
 {
 	printf("ping: sock4.fd: %d (socktype: %s)\n", p.sock_fd, "SOCK_DGRAM");
 	printf("ping: ai->ai_family: %s, ai->ai_canonname: '%s'\n", "AF_INET", p.ip_name);
+}
+
+static void	checkOpt(char *arg, t_ping *p)
+{
+	for (unsigned int i = 0; i < strlen(arg); i++)
+	{
+		if (!(arg[i] >= 48 && arg[i] <= 57))
+		{
+			error(1, "invalid argument");
+			safeExit(p);
+		}
+	}
 }
 
 static void flagCases(int ac, char *av[], t_ping *p)
@@ -60,21 +76,19 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				p->conf.ping_sleep = 0;
 				break ;
 			case 's':
+				checkOpt(optarg, p);
 				p->conf.ping_pkt_size = atoi(optarg);
 			break ;	
 			case 'n':
 				p->conf.resolve_dns = true;
 			break ;
-
-//case 'l'
-//case 'w'
-//case 'W'
-//case 'p'
-//case 'r'
-//case 'T'
-//estas dos ultimas ni idea de como se hacen con este modo
-//case 'ttl'
-//case 'ip-timestamp'
+			case 'w':
+				checkOpt(optarg, p);
+				p->conf.max_send = atoi(optarg);
+			break ;
+			case 'W':
+				checkOpt(optarg, p);
+			break ;
 		}
 	}
 }
@@ -215,7 +229,7 @@ static int sendPing(t_ping *p, t_pckt pckt, struct sockaddr_in *addr_con, t_conf
 
 		usleep(conf.ping_sleep);
 		clock_gettime(CLOCK_MONOTONIC, &time_start);
-		if (!loop)
+		if (!loop || conf.max_send == -1)
 		{
 			msg_count--;
 			break ;
@@ -266,6 +280,7 @@ static void init(char *av[], t_ping *p)
 	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
 	p->conf.resolve_dns = false;
+	p->conf.max_send = 0;
 }
 
 
