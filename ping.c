@@ -6,6 +6,8 @@ static void safeExit(t_ping *p)
 {
 	if (p->ip_addr)
 		free(p->ip_addr);
+	if (p->ip_name)
+		free(p->ip_name);
 	if (p->sock_fd > 0)
 	{
 		close(p->sock_fd);	
@@ -61,11 +63,15 @@ static void flagCases(int ac, char *av[], t_ping *p)
 static char *dnsResolution(char *addr_host, struct sockaddr_in *addr_con)
 {
 	struct hostent *host_entity;
-	char *ip = (char *)malloc(NI_MAXHOST * sizeof(char));
+	char *ip;
+	ip = (char *)malloc(NI_MAXHOST * sizeof(char));
 	if (!ip)
 		return (NULL);
 	if ((host_entity = gethostbyname(addr_host)) == NULL)
+	{
+		free(ip);
 		return (NULL);
+	}
 
 	strcpy(ip, inet_ntoa(*(struct in_addr *)host_entity->h_addr));
 	(*addr_con).sin_family = host_entity->h_addrtype;
@@ -198,11 +204,16 @@ static void ping(int ac, char *av[])
 	t_ping p;
 	int pos;
 
+	p.ip_name = NULL;
+	p.ip_addr = NULL;
 	pos = getAddr(av);
 	p.ip_name = strdup(av[pos]);
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
-		exit(error(2, ERR2));
+	{
+		error(2, ERR2);
+		safeExit(&p);
+	}
 	p.sock_fd = rawSocket();
 	if (p.sock_fd <= 0)
 		safeExit(&p);

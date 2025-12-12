@@ -9,6 +9,8 @@ static void safeExit(t_ping *p)
 {
 	if (p->ip_addr)
 		free(p->ip_addr);
+	if (p->ip_name)
+		free(p->ip_name);
 	if (p->pckt.msg)
 		free(p->pckt.msg);
 	if (p->sock_fd > 0)
@@ -281,7 +283,8 @@ static void init(char *av[], t_ping *p)
 	pos = getAddr(av);
 	p->pckt.msg = NULL;
 	p->ip_addr = NULL;
-	p->ip_name = strdup(av[pos]); p->conf.ping_sleep = 1000000;
+	p->ip_name = strdup(av[pos]); 
+	p->conf.ping_sleep = 1000000;
 	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
 	p->conf.resolve_dns = false;
