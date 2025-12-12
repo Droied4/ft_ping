@@ -83,7 +83,8 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				break ;
 			case 's':
 				checkOpt(optarg, p);
-				p->conf.ping_pkt_size = atoi(optarg); break ;	
+				p->conf.ping_pkt_size = atoi(optarg); 
+				break ;	
 			case 'n':
 				p->conf.resolve_dns = true;
 			break ;
@@ -301,6 +302,7 @@ static void ping(int ac, char *av[])
 	t_ping p;
 
 	init(av, &p); 
+	flagCases(ac, av, &p);
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
 		exit(error(2, ERR2));
@@ -308,7 +310,6 @@ static void ping(int ac, char *av[])
 	if (p.sock_fd <= 0)
 		safeExit(&p);
 	signal(SIGINT, loop_handler);
-	flagCases(ac, av, &p);
 	sendPing(&p, p.pckt, &p.addr_con, p.conf);
 	safeExit(&p);
 }

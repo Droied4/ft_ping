@@ -206,6 +206,7 @@ static void ping(int ac, char *av[])
 
 	p.ip_name = NULL;
 	p.ip_addr = NULL;
+	flagCases(ac, av, &p);
 	pos = getAddr(av);
 	p.ip_name = strdup(av[pos]);
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
@@ -218,7 +219,6 @@ static void ping(int ac, char *av[])
 	if (p.sock_fd <= 0)
 		safeExit(&p);
 	signal(SIGINT, loop_handler);
-	flagCases(ac, av, &p);
 	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name);
 	safeExit(&p);
 }
