@@ -8,7 +8,7 @@ OBJS_PATH=./build
 FLAGS = -Wall -Werror -Wextra
 DEP_FLAGS = -MMD -MP
 ADR_FLAGS = -fsanitize=address -g
-CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) $(ADR_FLAGS)
+CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) #$(ADR_FLAGS)
 
 SRC = ping.c
 IDIR = ./include 
@@ -27,19 +27,20 @@ BONUS_DEPS = $(addprefix $(OBJS_PATH)/, ${BONUS_OBJ:.o=.d})
 all: $(NAME)
 
 -include $(DEPS)
--include $(BONUS_DEPS)
 
-$(NAME): $(OBJ)
+$(NAME): $(OBJ) 
 	$(CC) $(CFLAGS) $^ -o $@ 
 
-$(NAME_BONUS): $(BONUS_OBJ)
-	$(CC) $(BONUS_CFLAGS) $^ -o $@
+$(OBJS_PATH)/%.o: %.c Makefile $(HEADER) 
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 bonus: $(NAME_BONUS)
 
-$(OBJS_PATH)/%.o: %.c Makefile 
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+-include $(BONUS_DEPS)
+
+$(NAME_BONUS): $(BONUS_OBJ)
+	$(CC) $(BONUS_CFLAGS) $^ -o $@
 
 $(OBJS_PATH)/bonus/%.o: bonus/%.c Makefile
 	@mkdir -p $(dir $@)
