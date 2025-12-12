@@ -1,4 +1,5 @@
 NAME = ft_ping
+NAME_BONUS = ft_ping_bonus
 
 CC = gcc
 
@@ -21,18 +22,20 @@ BONUS_HEADER = $(BONUS_IDIR)/ping_bonus.h
 BONUS_CFLAGS = $(FLAGS) -I $(BONUS_IDIR) $(DEP_FLAGS) 
 BONUS_SCR = $(BONUS)/ping_bonus.c
 BONUS_OBJ = $(addprefix $(OBJS_PATH)/, ${BONUS_SCR:.c=.o})
-BONUS_DEPS = $(addprefix $(OBJS_PATH)/, $(BONUS_OBJ:.o=.d))
+BONUS_DEPS = $(addprefix $(OBJS_PATH)/, ${BONUS_OBJ:.o=.d})
 
 all: $(NAME)
+
+-include $(DEPS)
+-include $(BONUS_DEPS)
 
 $(NAME): $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@ 
 
-bonus: $(BONUS_OBJ)
-	$(CC) $(BONUS_CFLAGS) $^ -o $(NAME) 
+$(NAME_BONUS): $(BONUS_OBJ)
+	$(CC) $(BONUS_CFLAGS) $^ -o $@
 
--include $(DEPS)
--include $(BONUS_DEPS)
+bonus: $(NAME_BONUS)
 
 $(OBJS_PATH)/%.o: %.c Makefile 
 	@mkdir -p $(dir $@)
@@ -47,6 +50,7 @@ clean:
 
 fclean: clean
 	@rm -f $(NAME)
+	@rm -f $(NAME_BONUS)
 
 re: fclean all
 
@@ -55,4 +59,4 @@ droied:
 	@echo "By Droied"
 	@echo
 
-.PHONY: all bonus clean fclean re droied 
+.PHONY: all clean fclean re droied 

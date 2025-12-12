@@ -2,7 +2,6 @@
 
 volatile int loop = 42;
 
-//LIBERAR MEMORIA DEL MALLOC DEL MSG en funcion beforeLoop
 //ARREGLAR EL RE LINK DEL BONUS make bonus  
 //rellenar el payload con un valor hexadecimal no con un caracter y anadir comprobacion
 //paso 4 disfrutar porque ya acabe jejeje
@@ -11,6 +10,8 @@ static void safeExit(t_ping *p)
 {
 	if (p->ip_addr)
 		free(p->ip_addr);
+	if (p->pckt.msg)
+		free(p->pckt.msg);
 	if (p->sock_fd > 0)
 	{
 		close(p->sock_fd);	
