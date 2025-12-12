@@ -105,7 +105,10 @@ static char *dnsResolution(char *addr_host, struct sockaddr_in *addr_con)
 	if (!ip)
 		return (NULL);
 	if ((host_entity = gethostbyname(addr_host)) == NULL)
+	{
+		free(ip);
 		return (NULL);
+	}
 
 	strcpy(ip, inet_ntoa(*(struct in_addr *)host_entity->h_addr));
 	(*addr_con).sin_family = host_entity->h_addrtype;
