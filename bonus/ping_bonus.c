@@ -279,6 +279,8 @@ static void init(char *av[], t_ping *p)
 	int pos;
 
 	pos = getAddr(av);
+	p->pckt.msg = NULL;
+	p->ip_addr = NULL;
 	p->ip_name = strdup(av[pos]); p->conf.ping_sleep = 1000000;
 	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
