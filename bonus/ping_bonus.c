@@ -2,9 +2,8 @@
 
 volatile int loop = 42;
 
-//ARREGLAR EL RE LINK DEL BONUS make bonus  
 //rellenar el payload con un valor hexadecimal no con un caracter y anadir comprobacion
-//paso 4 disfrutar porque ya acabe jejeje
+//paso 2 disfrutar porque ya acabe jejeje
 
 static void safeExit(t_ping *p)
 {
