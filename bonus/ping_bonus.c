@@ -48,7 +48,7 @@ static void verboseMode(t_ping p)
 	printf("ping: ai->ai_family: %s, ai->ai_canonname: '%s'\n", "AF_INET", p.ip_name);
 }
 
-static void	checkOpt(char *arg, t_ping *p)
+static void	checkDigit(char *arg, t_ping *p)
 {
 	for (unsigned int i = 0; i < strlen(arg); i++)
 	{
@@ -58,6 +58,31 @@ static void	checkOpt(char *arg, t_ping *p)
 			safeExit(p);
 		}
 	}
+}
+
+static void decode_pattern(const char *text, t_ping *p)
+{
+    size_t i = 0;
+    int c, off;
+	    unsigned char pattern[32];
+
+    while (*text)
+    {
+        if (i >= sizeof(pattern))
+            break;
+
+        if (sscanf(text, "%2x%n", &c, &off) != 1)
+		{
+			error(1, "error in pattern");
+			safeExit(p);	
+		}
+        pattern[i++] = (unsigned char)c;
+        text += off;
+    }
+	  printf("PATTERN: 0x");
+    for (size_t j = 0; j < i; j++)
+        printf("%02x", pattern[j]);
+    printf("\n");
 }
 
 static void flagCases(int ac, char *av[], t_ping *p)
@@ -82,18 +107,19 @@ static void flagCases(int ac, char *av[], t_ping *p)
 				p->conf.ping_sleep = 0;
 				break ;
 			case 's':
-				checkOpt(optarg, p);
+				checkDigit(optarg, p);
 				p->conf.ping_pkt_size = atoi(optarg); 
 				break ;	
 			case 'n':
 				p->conf.resolve_dns = true;
 			break ;
 			case 'w':
-				checkOpt(optarg, p);
+				checkDigit(optarg, p);
 				p->conf.max_send = atoi(optarg);
 			break ;
 			case 'p': 
-				p->conf.payload = *optarg;
+				decode_pattern(optarg, p);	
+				p->conf.payload = optarg;
 			break ;
 		}
 	}
@@ -208,7 +234,7 @@ static void beforeLoop(t_ping *p, struct timeval *tv_out, int *ttl_val, t_pckt *
     if (!pckt->msg)
         safeExit(p);
     for (int i = 0; i < p->conf.ping_pkt_size - 1; i++)
-        pckt->msg[i] = p->conf.payload;
+        pckt->msg[i] = p->conf.payload[i];
 }
 
 
@@ -293,7 +319,7 @@ static void init(char *av[], t_ping *p)
 	p->conf.ping_pkt_size = 56;
 	p->conf.resolve_dns = false;
 	p->conf.max_send = 0;
-	p->conf.payload = '0';
+	p->conf.payload = "0x0";
 }
 
 
