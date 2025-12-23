@@ -35,7 +35,7 @@ typedef struct config {
 	int ping_pkt_size;
 	bool resolve_dns;
 	int max_send;
-	char payload;
+	char *payload;
 } t_config;
 
 typedef struct ping {
