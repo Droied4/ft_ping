@@ -2,9 +2,6 @@
 
 volatile int loop = 42;
 
-//rellenar el payload con un valor hexadecimal no con un caracter y anadir comprobacion
-//paso 2 disfrutar porque ya acabe jejeje
-
 static void safeExit(t_ping *p)
 {
 	if (p->ip_addr)
