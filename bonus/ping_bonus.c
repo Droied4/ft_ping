@@ -312,7 +312,6 @@ static void init(char *av[], t_ping *p)
 	p->ip_addr = NULL;
 	p->ip_name = strdup(av[pos]); 
 	p->conf.ping_sleep = 1000000;
-	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
 	p->conf.resolve_dns = false;
 	p->conf.max_send = 0;
