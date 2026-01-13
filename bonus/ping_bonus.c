@@ -324,13 +324,13 @@ static void ping(int ac, char *av[])
 	t_ping p;
 
 	init(av, &p); 
+	p.sock_fd = rawSocket();
+	if (p.sock_fd <= 0)
+		safeExit(&p);
 	flagCases(ac, av, &p);
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
 		exit(error(2, ERR2));
-	p.sock_fd = rawSocket();
-	if (p.sock_fd <= 0)
-		safeExit(&p);
 	signal(SIGINT, loop_handler);
 	sendPing(&p, p.pckt, &p.addr_con, p.conf);
 	safeExit(&p);

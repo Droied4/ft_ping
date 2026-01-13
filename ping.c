@@ -171,7 +171,7 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 			struct icmphdr *recv_hdr = (struct icmphdr *)rbuf;
 			if (recv_hdr->type == 0 && recv_hdr->code == 0)
 			{
-				printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", PING_PKT_S, ip_addr, msg_count, ttl_val, rtt_msec);
+				printf("%d bytes from %s : icmp_seq=%d ttl=%d time=%.1Lf ms\n", (int)(PING_PKT_S + sizeof(struct icmphdr)), ip_addr, msg_count, ttl_val, rtt_msec);
 				msg_received_count++;
 			}
 		}

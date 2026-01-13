@@ -17,7 +17,7 @@
 # define h_addr h_addr_list[0]
 # define PORT_NO 0
 # define PING_SLEEP 1000000
-# define PING_PKT_S 64
+# define PING_PKT_S 56 
 # define RECV_TIMEOUT 1
 # define ERR1 "usage error: Destination address required"
 # define ERR2 "Name or service not known"
