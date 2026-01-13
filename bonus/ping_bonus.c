@@ -184,8 +184,11 @@ static int receiveLogic(int socket_fd, int msg_count, struct timespec time_start
 	struct sockaddr_in r_addr;
 
 	raddr_len = sizeof(r_addr);
+	printf("before recieve \n");
 	if (recvfrom(socket_fd, rbuf, sizeof(rbuf), 0, (struct sockaddr *)&r_addr, &raddr_len) > 0)
 	{
+
+		printf("after recieve \n");
 		clock_gettime(CLOCK_MONOTONIC, &time_end);
 		time_elapsed = ((double)(time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
 		long double rtt_msec = (time_end.tv_sec - time_start.tv_sec) * 1000.0 + time_elapsed;
@@ -223,7 +226,7 @@ static void beforeLoop(t_ping *p, struct timeval *tv_out, int *ttl_val, t_pckt *
 	}
 
 	//Configure timeout for receive
-	setsockopt(p->sock_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv_out, sizeof(tv_out));
+	setsockopt(p->sock_fd, SOL_SOCKET, SO_RCVTIMEO, tv_out, sizeof(*tv_out));
 
 	//Configure pckt
     memset(pckt, 0, sizeof(*pckt));
@@ -267,12 +270,14 @@ static int sendPing(t_ping *p, t_pckt pckt, struct sockaddr_in *addr_con, t_conf
 			break ;
 		}
 		//send
+		printf("before send \n");
 		if (sendto(socket_fd, &pckt, sizeof(pckt), 0, (struct sockaddr *)addr_con, sizeof(*addr_con)) <= 0)
 			return (error(2, ERR4));
 		if (conf.ping_sleep > 0)
 			msg_received_count += receiveLogic(socket_fd, msg_count, time_start, ip_addr, ttl_val, conf);
 		else
 			write(1, ".", 1);
+		printf("after send \n");
 	}
 	clock_gettime(CLOCK_MONOTONIC, &tfe);
 	time_elapsed = ((double)(tfe.tv_nsec - tfs.tv_nsec)) / 1000000.0;
