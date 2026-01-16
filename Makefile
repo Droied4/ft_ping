@@ -5,10 +5,10 @@ CC = gcc
 
 OBJS_PATH=./build
 
-FLAGS = -Wall -Werror -Wextra
+FLAGS = -Wall -Werror -Wextra 
 DEP_FLAGS = -MMD -MP
 ADR_FLAGS = -fsanitize=address -g
-CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) #$(ADR_FLAGS)
+CFLAGS = $(FLAGS) -I $(IDIR) $(DEP_FLAGS) $(ADR_FLAGS)
 
 SRC = ping.c
 IDIR = ./include 

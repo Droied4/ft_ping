@@ -189,14 +189,18 @@ static int sendPing(int socket_fd, struct sockaddr_in *addr_con, char *ip_addr, 
 static int getAddr(char *av[])
 {
 	int i = 1;
-	while(av[i])
+	while(av[i + 1])
 	{
-		if (av[i][0] != '-')
-			return (i);
+		if (av[i][0] == '-')
+		{
+			if (!(av[i + 2]))
+				return (i + 1);
+			else
+				return (i + 2);
+		}
 		i++;
 	}
-	exit(error(2, ERR1));	
-	return (-1);
+	return (i);
 }
 
 static void ping(int ac, char *av[])
@@ -208,16 +212,16 @@ static void ping(int ac, char *av[])
 	p.ip_addr = NULL;
 	pos = getAddr(av);
 	p.ip_name = strdup(av[pos]);
+	p.sock_fd = rawSocket();
+	if (p.sock_fd <= 0)
+		safeExit(&p);
+	flagCases(ac, av, &p);
 	p.ip_addr = dnsResolution(p.ip_name, &p.addr_con);
 	if (!p.ip_addr)
 	{
 		error(2, ERR2);
 		safeExit(&p);
 	}
-	p.sock_fd = rawSocket();
-	if (p.sock_fd <= 0)
-		safeExit(&p);
-	flagCases(ac, av, &p);
 	signal(SIGINT, loop_handler);
 	sendPing(p.sock_fd, &p.addr_con, p.ip_addr, p.ip_name);
 	safeExit(&p);
