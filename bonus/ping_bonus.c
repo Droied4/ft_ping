@@ -295,7 +295,7 @@ static int getAddr(char *av[])
 		if (av[i][0] == '-')
 		{
 			if (!(av[i + 2]))
-				return (i + 1);
+				return (-1);
 			else
 				return (i + 2);
 		}
@@ -308,9 +308,15 @@ static void init(char *av[], t_ping *p)
 {
 	int pos;
 
-	pos = getAddr(av);
 	p->pckt.msg = NULL;
 	p->ip_addr = NULL;
+	p->ip_name = NULL;
+	pos = getAddr(av);
+	if (pos < 0)
+	{
+		error(1, "address require");
+		safeExit(p);
+	}
 	p->ip_name = strdup(av[pos]); 
 	p->conf.ping_sleep = 1000000;
 	p->conf.ping_pkt_size = 56;
